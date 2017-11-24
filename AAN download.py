@@ -3,7 +3,7 @@ import datetime
 import urllib
 from bs4 import BeautifulSoup
 
-
+# download the PDF files after getting the URL 
 def download_file(download_url, filename):
     try:
         resp = requests.get(download_url)
@@ -15,7 +15,7 @@ def download_file(download_url, filename):
             file.close()
     except Exception as e:
         return None
-
+# translate the doi to the URL for PDF files
 def doi_to_pdf(doi):
     dom = requests.get(doi).text
     soup = BeautifulSoup(dom, 'html5lib')
@@ -28,6 +28,7 @@ def main():
     print('AAN clinical reasoning')
     urlpt1 = 'http://www.neurology.org/search?submit=yes&submit=yes&andorexacttitle=and&RESULTFORMAT=1&sortspecbrief=relevance&%20Fellow%20Section=&FIRSTINDEX='
     urlpt2 = '&hits=10&title=Clinical%20Reasoning&titleabstract=&flag=&sortspec=date&andorexacttitleabs=and&displaysectionid=RESIDENT%20AND%20FELLOW%20SECTION&tocsectionid=Resident%20and%20Fellow%20Section&tocsectionid=Resident%20&andorexactfulltext=and&hitsbrief=25&fulltext='
+    # number could be adjusted 
     for i in range(0,300, 10):
         url = urlpt1 + str(i) + urlpt2
         dom = requests.get(url).text
@@ -35,17 +36,18 @@ def main():
         date_list=[]
         for ele in soup.find_all('cite'):
             paper_date = ele.find('span',class_='cit-print-date').text
+            # format of date could be adjusted 
             new_date = datetime.datetime.strptime(paper_date, '%B %d, %Y,  ').strftime('%Y%m%d')+" AAN clinical reasoning"
             date_list.append(new_date)
             doi =ele.a['href']
 
+            # in case there are more than one paper on the same day    
             if date_list.count(new_date)>1:
                 pdfname = new_date + '-' + str(date_list.count(new_date)) + '.pdf'
             else:
                 pdfname = new_date + '.pdf'
             pdfurl = doi_to_pdf(doi)
             download_file(pdfurl, pdfname)
-
 
 if __name__ == '__main__':
     main()
